@@ -2,21 +2,45 @@ import { WebSocketServer, WebSocket } from "ws";
 
 const wss = new WebSocketServer({port : 8080})
 
-let allSockets:WebSocket[] = []
+//let allSockets:WebSocket[] = []
+const allSockets=new Map <WebSocket,string>();
 
 
 wss.on("connection", (socket)=>{
     console.log("user connected ")
 
-    allSockets.push(socket)// we are keeping all the socket object instances here
+
 
     socket.on("message",(message)=>{
-        allSockets.forEach(s => s.send(message.toString() + "sent through server "))// we are broadcasting the messages to all the sockets we have 
-        })    
+         const parsedMessage = JSON.parse(message.toString());
+         if(parsedMessage.type==="join"){
+            allSockets.set(socket,parsedMessage.payload.roomId)
+         }
 
+      if (parsedMessage.type === "message") {   
+             const roomId = allSockets.get(socket);
+            if (!roomId) return;
+
+  // Broadcast to others in the same room
+            for (const [client, clientRoom] of allSockets) {
+                if ( client !== socket &&                 // don’t send to sender
+                    clientRoom === roomId &&            // same room
+                    client.readyState === WebSocket.OPEN) 
+                    {
+                    client.send(JSON.stringify({
+                    type: "message",
+                    payload: parsedMessage.payload,   // send message payload directly
+      }));
+    }
+  }
+}
+
+
+        })
+        
+ 
 
     socket.on("disconnect",()=>{
-        allSockets=allSockets.filter(x => x != socket);
     }) // removing the socket which gets dissconnected   
  
 }) 
