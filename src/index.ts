@@ -10,12 +10,13 @@ wss.on("connection", (socket)=>{
 
     allSockets.push(socket)// we are keeping all the socket object instances here
 
+    socket.on("message",(message)=>{
+        allSockets.forEach(s => s.send(message.toString() + "sent through server "))// we are broadcasting the messages to all the sockets we have 
+        })    
 
 
-socket.on("message",(message)=>{
-
-allSockets.forEach(s => s.send(message.toString() + "sent through server "))// we are broadcasting the messages to all te sockets we have 
-
-})    
+    socket.on("disconnect",()=>{
+        allSockets=allSockets.filter(x => x != socket);
+    }) // removing the socket which gets dissconnected   
  
-})
+}) 
