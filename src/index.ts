@@ -3,6 +3,7 @@ import { WebSocketServer, WebSocket } from "ws";
 const wss = new WebSocketServer({port : 8080})
 
 const allSockets=new Map <WebSocket,string>();
+const history = new Map<string, string[]>();
 
 
 wss.on("connection", (socket)=>{
@@ -13,10 +14,19 @@ wss.on("connection", (socket)=>{
     socket.on("message",(message)=>{
          const parsedMessage = JSON.parse(message.toString());
          if(parsedMessage.type==="join"){
-            allSockets.set(socket,parsedMessage.payload.roomId)
-            console.log(parsedMessage.payload.roomId)
-              //console.log("Raw message received:", message.toString()); // ✅ Add this
+              const roomId = parsedMessage.payload.roomId;
 
+            allSockets.set(socket,roomId)
+            console.log(roomId)
+            
+            const msgs = history.get(roomId) || [];
+
+              socket.send(
+                    JSON.stringify({
+                         type: "history",
+                         payload: msgs,
+                                    })
+                        )
 
 
          }
@@ -26,6 +36,12 @@ wss.on("connection", (socket)=>{
  
              const roomId = allSockets.get(socket);
             if (!roomId) return;
+
+            const msgs = history.get(roomId) || [];
+            msgs.push(parsedMessage.payload.message);
+            history.set(roomId, msgs);
+
+
 
 
 
@@ -48,7 +64,10 @@ wss.on("connection", (socket)=>{
         
  
 
-    socket.on("disconnect",()=>{
-    }) // removing the socket which gets dissconnected   
+    socket.on("close", () => {
+        const roomId = allSockets.get(socket);
+        allSockets.delete(socket); // Clean up
+        console.log(`User disconnected from room: ${roomId}`);
+  }); // removing the socket which gets dissconnected   
  
 }) 
