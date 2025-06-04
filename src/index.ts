@@ -7,7 +7,7 @@ const allSockets=new Map <WebSocket,string>();
 
 wss.on("connection", (socket)=>{
     console.log("user connected ")
- 
+  
 
 
     socket.on("message",(message)=>{
@@ -21,7 +21,9 @@ wss.on("connection", (socket)=>{
 
          }
 
-      if (parsedMessage.type === "message") {   
+      if (parsedMessage.type === "message") {  
+                    console.log(parsedMessage.payload.message)
+ 
              const roomId = allSockets.get(socket);
             if (!roomId) return;
 
@@ -29,7 +31,7 @@ wss.on("connection", (socket)=>{
 
   // Broadcast to others in the same room
             for (const [client, clientRoom] of allSockets) {
-                if ( client !== socket &&                 // don’t send to sender
+                if ( //client !== socket &&                 // don’t send to sender
                     clientRoom === roomId &&            // same room
                     client.readyState === WebSocket.OPEN) 
                     {
