@@ -8,7 +8,7 @@ const data = new Schema ({
 })
 
 
-const DataModel = mongoose.model('ChatData', data)
+const DataModel = mongoose.model('chatdatas', data)
 
 
 export {DataModel}
