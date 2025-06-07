@@ -12,9 +12,16 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@types/ws": "^8.18.1",
-    "mongoose": "^8.15.1",
-    "typescript": "^5.8.3",
-    "ws": "^8.18.2"
+  "@types/node": "^20.4.1",
+  "@types/ws": "^8.18.1",
+  "mongoose": "^8.15.1",
+  "typescript": "^5.8.3",
+  "ws": "^8.18.2"
+},
+
+  "devDependencies": {
+    "@types/node": "^22.15.30"
   }
+
+  
 }
