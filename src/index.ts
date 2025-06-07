@@ -2,7 +2,9 @@ import { WebSocketServer, WebSocket, RawData } from "ws";
 import mongoose from 'mongoose';
 import { DataModel } from "./db";
 
-const wss = new WebSocketServer({ port: 8080 });
+const PORT = process.env.PORT || 8080;
+
+
 const DB_URI = "mongodb+srv://prasannasahoo0806:pua5dRtvJRTYxvGm@cluster0.lx9jyi5.mongodb.net/ChatData";
 
 async function StartServer() {
@@ -11,6 +13,7 @@ async function StartServer() {
     console.log("Database connected");
 
     const allSockets = new Map<WebSocket, string>();
+     const wss = new WebSocketServer({ port: +PORT });
 
     wss.on("connection", (socket: WebSocket) => {
       console.log("User connected");
