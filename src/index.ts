@@ -14,14 +14,13 @@ async function StartServer(){
 
 
     const allSockets=new Map <WebSocket,string>();
-    const history = new Map<string, string[]>();
 
     wss.on("connection", (socket)=>{
     console.log("user connected ")
   
 
 
-    socket.on("message",(message)=>{
+    socket.on("message",async (message)=>{
          const parsedMessage = JSON.parse(message.toString());
          if(parsedMessage.type==="join"){
               const roomId = parsedMessage.payload.roomId;
@@ -30,13 +29,16 @@ async function StartServer(){
             console.log(roomId)
             console.log(`User connected room: ${roomId}`);
 
-            
-            const msgs = history.get(roomId) || [];
+            let roomData = await DataModel.findOne({ roomId });
+           
+            if (!roomData) {
+                 roomData = await DataModel.create({ roomId, messages: [] });
+                        }
 
               socket.send(
                     JSON.stringify({
                          type: "history",
-                         payload: msgs,
+                         payload: roomData.messages,
                                     })
                         )
 
@@ -49,9 +51,9 @@ async function StartServer(){
              const roomId = allSockets.get(socket);
             if (!roomId) return;
 
-            const msgs = history.get(roomId) || [];
-            msgs.push(parsedMessage.payload.message);
-            history.set(roomId, msgs);
+            const msg = parsedMessage.payload.message;
+            await DataModel.updateOne({ roomId }, { $push: { messages: msg } });//
+
 
 
 
@@ -65,7 +67,7 @@ async function StartServer(){
                     {
                     client.send(JSON.stringify({
                     type: "message",
-                    payload: parsedMessage.payload,   // send message payload directly
+                    payload: { message: msg },
       }));
     }
   }
