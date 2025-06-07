@@ -1,0 +1,14 @@
+import mongoose from 'mongoose'
+
+const Schema = mongoose.Schema;
+
+const data = new Schema ({
+    roomId : {type :String},
+    messages: [{ type: String }],
+})
+
+
+const DataModel = mongoose.model('ChatData', data)
+
+
+export {DataModel}

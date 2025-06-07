@@ -1,12 +1,22 @@
 import { WebSocketServer, WebSocket } from "ws";
+import mongoose from 'mongoose';
+import { DataModel } from "./db"
+
 
 const wss = new WebSocketServer({port : 8080})
+const DB_URI = "mongodb+srv://prasannasahoo0806:pua5dRtvJRTYxvGm@cluster0.lx9jyi5.mongodb.net/ChatData";
 
-const allSockets=new Map <WebSocket,string>();
-const history = new Map<string, string[]>();
+async function StartServer(){
+  try {
+
+    await mongoose.connect(DB_URI);
+    console.log("Database connected");
 
 
-wss.on("connection", (socket)=>{
+    const allSockets=new Map <WebSocket,string>();
+    const history = new Map<string, string[]>();
+
+    wss.on("connection", (socket)=>{
     console.log("user connected ")
   
 
@@ -18,6 +28,8 @@ wss.on("connection", (socket)=>{
 
             allSockets.set(socket,roomId)
             console.log(roomId)
+            console.log(`User connected room: ${roomId}`);
+
             
             const msgs = history.get(roomId) || [];
 
@@ -71,3 +83,12 @@ wss.on("connection", (socket)=>{
   }); // removing the socket which gets dissconnected   
  
 }) 
+
+  }
+  catch (error) {
+    console.error("Database connection failed", error);
+    process.exit(1);
+  }
+}
+
+StartServer();
