@@ -34,7 +34,7 @@ if (parsedMessage.type === "join") {
       if (!password || password !== roomData.password) {
         socket.send(JSON.stringify({
           type: "error",
-          payload: { message: "Incorrect or missing password for this room." }
+          payload: { message: "Incorrect or missing password for this room. Or a private room already exists" }
         }));
         socket.close();
         return;
