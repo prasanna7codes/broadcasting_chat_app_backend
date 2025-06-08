@@ -25,13 +25,13 @@ if (parsedMessage.type === "join") {
   const roomId: string = parsedMessage.payload.roomId;
   const password: string | null = parsedMessage.payload.password ?? null;
 
-  let roomData = await DataModel.findOne({ roomId });
+  const roomData = await DataModel.findOne({ roomId });
 
   if (roomData) {
-    // Room exists, check password
+    // Room already exists
     if (roomData.password) {
-      // Room is protected
-      if (!password || roomData.password !== password) {
+      // Room is password protected
+      if (!password || password !== roomData.password) {
         socket.send(JSON.stringify({
           type: "error",
           payload: { message: "Incorrect or missing password for this room." }
@@ -40,19 +40,32 @@ if (parsedMessage.type === "join") {
         return;
       }
     }
+
+    // Correct password or public room
+    allSockets.set(socket, roomId);
+    console.log(`User connected to room: ${roomId}`);
+    socket.send(JSON.stringify({
+      type: "history",
+      payload: roomData.messages,
+    }));
+
   } else {
-    // Room does not exist → create with or without password
-    roomData = await DataModel.create({ roomId, password, messages: [] });
+    // Room doesn't exist → allow creation
+    const newRoom = await DataModel.create({
+      roomId,
+      password,
+      messages: [],
+    });
+
+    allSockets.set(socket, roomId);
+    console.log(`New room created: ${roomId}`);
+    socket.send(JSON.stringify({
+      type: "history",
+      payload: newRoom.messages,
+    }));
   }
-
-  allSockets.set(socket, roomId);
-  console.log(`User connected to room: ${roomId}`);
-
-  socket.send(JSON.stringify({
-    type: "history",
-    payload: roomData.messages,
-  }));
 }
+
 
 
 
