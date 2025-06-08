@@ -22,24 +22,35 @@ async function StartServer() {
         const parsedMessage = JSON.parse(message.toString());
 
         if (parsedMessage.type === "join") {
-          const roomId: string = parsedMessage.payload.roomId;
+  const roomId: string = parsedMessage.payload.roomId;
+  const password: string | null = parsedMessage.payload.password;
 
-          allSockets.set(socket, roomId);
-          console.log(`User connected to room: ${roomId}`);
+  let roomData = await DataModel.findOne({ roomId });
 
-          let roomData = await DataModel.findOne({ roomId });
+  if (roomData) {
+    if (roomData.password && roomData.password !== password) {
+      // Reject user
+      socket.send(JSON.stringify({
+        type: "error",
+        payload: { message: "Incorrect password for this room." }
+      }));
+      socket.close(); // optionally disconnect
+      return;
+    }
+  } else {
+    // Create new room with or without password
+    roomData = await DataModel.create({ roomId, password, messages: [] });
+  }
 
-          if (!roomData) {
-            roomData = await DataModel.create({ roomId, messages: [] });
-          }
+  allSockets.set(socket, roomId);
+  console.log(`User connected to room: ${roomId}`);
 
-          socket.send(
-            JSON.stringify({
-              type: "history",
-              payload: roomData.messages,
-            })
-          );
-        }
+  socket.send(JSON.stringify({
+    type: "history",
+    payload: roomData.messages,
+  }));
+}
+
 
         if (parsedMessage.type === "message") {
           const msg: string = parsedMessage.payload.message;
