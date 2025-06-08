@@ -21,24 +21,27 @@ async function StartServer() {
       socket.on("message", async (message: RawData) => {
         const parsedMessage = JSON.parse(message.toString());
 
-        if (parsedMessage.type === "join") {
+if (parsedMessage.type === "join") {
   const roomId: string = parsedMessage.payload.roomId;
-  const password: string | null = parsedMessage.payload.password;
+  const password: string | null = parsedMessage.payload.password ?? null;
 
   let roomData = await DataModel.findOne({ roomId });
 
   if (roomData) {
-    if (roomData.password && roomData.password !== password) {
-      // Reject user
-      socket.send(JSON.stringify({
-        type: "error",
-        payload: { message: "Incorrect password for this room." }
-      }));
-      socket.close(); // optionally disconnect
-      return;
+    // Room exists, check password
+    if (roomData.password) {
+      // Room is protected
+      if (!password || roomData.password !== password) {
+        socket.send(JSON.stringify({
+          type: "error",
+          payload: { message: "Incorrect or missing password for this room." }
+        }));
+        socket.close();
+        return;
+      }
     }
   } else {
-    // Create new room with or without password
+    // Room does not exist → create with or without password
     roomData = await DataModel.create({ roomId, password, messages: [] });
   }
 
@@ -50,6 +53,7 @@ async function StartServer() {
     payload: roomData.messages,
   }));
 }
+
 
 
         if (parsedMessage.type === "message") {
