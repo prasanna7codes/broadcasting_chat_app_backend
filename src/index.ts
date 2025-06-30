@@ -5,7 +5,7 @@ import { DataModel } from "./db";
 const PORT = process.env.PORT || 8080;
 
 
-const DB_URI = "mongodb+srv://prasannasahoo0806:pua5dRtvJRTYxvGm@cluster0.lx9jyi5.mongodb.net/ChatData";
+const DB_URI = process.env.MONGO_DB;
 
 async function StartServer() {
   try {
